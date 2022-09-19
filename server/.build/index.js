@@ -28,6 +28,7 @@ class Server {
         this.app.use('/api/contador', contadorRoutes_1.default);
         this.app.use('/api/usuario', usuarioRoutes_1.default);
         this.app.use('/api/auth', authRoutes_1.default);
+        this.app.use("/api/users", usuarioRoutes_1.default);
     }
     start() {
         this.app.listen(this.app.get('port'), () => {

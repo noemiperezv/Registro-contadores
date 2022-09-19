@@ -28,6 +28,7 @@ const authDAO_1 = __importDefault(require("../dao/authDAO"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const keySecret_1 = __importDefault(require("../keySecret"));
 const validator_1 = __importDefault(require("validator"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 class AuthController {
     iniciarSesion(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -52,9 +53,13 @@ class AuthController {
                     return res.status(404).json({ message: "El usuario y/o contraseña es incorrecto", code: 1 });
                 }
                 for (let usuario of lstUsers) {
-                    if (usuario.password == password) {
+                    console.log("Contraseña cifrada" + bcryptjs_1.default.hashSync(password, 8));
+                    console.log("Contraseña no cifrada" + usuario.password);
+                    if (bcryptjs_1.default.compareSync(password, usuario.password)) {
                         const { password, fechaRegistro } = usuario, newUser = __rest(usuario, ["password", "fechaRegistro"]);
                         var token = jsonwebtoken_1.default.sign(newUser, keySecret_1.default.keys.secret, { expiresIn: '1h' });
+                        console.log("Contraseña cifrada" + bcryptjs_1.default.hashSync(password, 8));
+                        console.log("Contraseña no cifrada" + usuario.password);
                         return res.json({ message: "Autentificación correcta", token, code: 0 });
                     }
                     else {

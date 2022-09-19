@@ -1,49 +1,150 @@
-import {Request, Response} from 'express';
-import pool from '../database';
+import { Request, Response } from "express";
+import dao from '../dao/usuarioDAO';
+import validator from 'validator';
+import criptjs from 'crypto-js';
+import keySecret from "../keySecret";
+import bcryptjs from 'bcryptjs';
 
-class UsuarioController{
-    public async list (req:Request, res: Response){
-        //res.send('Contadores')
-        //pool.query('DESCRIBE tbl_usuario');
-        //res.json('listando contadores');
-        const contadores = await pool.query('SELECT * FROM tbl_usuario');
-        res.json(contadores);
-    } 
+class UsuarioController {
 
-    public async getOne (req:Request, res:Response): Promise<any>{
-        const {id} = req.params;
-        //res.json({text:'Este es el contador buscado ' + req.params.id}); 
-        const usuario = await pool.query('SELECT * FROM tbl_usuario WHERE cveUsuario = ?', [id]);
-        console.log(usuario);
-        if(usuario.length > 0){
-            return res.json(usuario[0]);
-        }else{
-            res.status(404).json({text: 'El usuario no existe.'})
+    /**
+     * @description Lista los usuarios disponibles
+     * @param req 
+     * @param res 
+     * @returns Promise<Response<any, Record<string, any>> | undefined>
+     */
+    public async listar(req: Request, res: Response) {
+        try {
+
+            const result = await dao.listar();
+
+            res.json(result);
+        } catch (error: any) {
+            return res.status(500).json({ message : `${error.message}` });
         }
-        res.json({text: 'Contador encontrado'});
     }
 
-    public async create (req:Request, res:Response): Promise<void> {
-        await pool.query('INSERT INTO tbl_usuario set ?', [req.body]);
-        console.log(req.body);
-        res.json({message:'Contador guardado!!'});
+    /**
+     *  @description Inserción de usuarios a la bd
+     * @param req 
+     * @param res 
+     * @returns Promise<Response<any, Record<string, any>> | undefined>
+     */
+    public async insertar(req: Request, res: Response) {
+        try {
+            // se obtienen los datos del body
+            var usuario = req.body;
 
+            // validar que los datos no sean nulos o indefinidos
+            if (!usuario.nombre
+                || !usuario.apellidos
+                || !usuario.username
+                || !usuario.password) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1});
+            }
+
+            // se verifica que los datos no se encuentren vacios
+            if (validator.isEmpty(usuario.nombre.trim())
+                || validator.isEmpty(usuario.apellidos.trim())
+                || validator.isEmpty(usuario.username.trim())
+                || validator.isEmpty(usuario.password.trim())) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1});
+            }
+
+            // encriptar nuestra contraseña
+            var encryptedText = bcryptjs.hashSync(usuario.password, 8).toString();
+            usuario.password = encryptedText;
+
+            
+            const newUser = {
+                nombre: usuario.nombre.trim(),
+                apellidos: usuario.apellidos.trim(),
+                username: usuario.username.trim(),
+                password: usuario.password.trim()
+            }
+
+            console.log(newUser);
+
+            // inserción de los datos
+            const result = await dao.insertar(newUser);
+
+            if (result.affectedRows > 0) {
+                return res.json({message: "Los datos se guardaron correctamente", code: 0});
+            } else {
+                return res.status(404).json({ message: result.message, code: 1});
+            }
+
+        } catch (error: any) {
+            return res.status(500).json({ message : `${error.message}` });
+        }
     }
 
-    public async delete (req:Request, res:Response): Promise<void> {
-        const {id} = req.params;
-        await pool.query('DELETE FROM tbl_usuario WHERE cveUsuario = ?', [id]);
-        //res.json({text:'Eliminando un contador ' + req.params.id});
-        res.json({message:'El juego fue eliminado' + [id]});
+    public async actualizar(req: Request, res: Response) {
+        try {
+            // se obtienen los datos del body
+            var usuario = req.body;
+
+            // validar que los datos no sean nulos o indefinidos
+            if (!usuario.cveUsuario
+                || !usuario.nombre
+                || !usuario.apellidos) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1});
+            }
+
+            // se verifica que los datos no se encuentren vacios
+            if (usuario.cveUsuario <= 0
+                || validator.isEmpty(usuario.nombre.trim())
+                || validator.isEmpty(usuario.apellidos.trim())) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1});
+            }
+
+            const newUser = {
+                nombre: usuario.nombre.trim(),
+                apellidos: usuario.apellidos.trim()
+            }
+
+            // actualización de los datos
+            const result = await dao.actualizar(newUser, usuario.cveUsuario);
+
+            if (result.affectedRows > 0) {
+                return res.json({message: "Los datos se actualizaron correctamente", code: 0});
+            } else {
+                return res.status(404).json({ message: result.message, code: 1});
+            }
+
+        } catch (error: any) {
+            return res.status(500).json({ message : `${error.message}` });
+        }
     }
 
-    public async update (req:Request, res:Response): Promise<void>{
-        const {id} = req.params;
-        //res.json({text:'Actualizando un contador ' + req.params.id});
-        await pool.query('UPDATE tbl_usuario SET ? WHERE cveUsuario = ?', [req.body, id]);
-        res.json({"message":'Se actualizó el contador.'})
+    public async eliminar(req: Request, res: Response) {
+        try {
+            // se obtienen los datos del body
+            var { cveUsuario } = req.params;
+
+            // validar que los datos no sean nulos o indefinidos
+            if (!cveUsuario) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1});
+            }
+
+            // se verifica que los datos no se encuentren vacios
+            if (validator.isEmpty(cveUsuario.trim())) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1});
+            }
+
+            // actualización de los datos
+            const result = await dao.eliminar(parseInt(cveUsuario));
+
+            if (result.affectedRows > 0) {
+                return res.json({message: "Los datos se eliminaron correctamente", code: 0});
+            } else {
+                return res.status(404).json({ message: result.message, code: 1});
+            }
+
+        } catch (error: any) {
+            return res.status(500).json({ message : `${error.message}` });
+        }
     }
+
 }
-
-const usuarioController = new UsuarioController();
-export default usuarioController;
+export const usuarioController = new UsuarioController();

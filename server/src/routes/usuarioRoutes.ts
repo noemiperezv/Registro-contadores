@@ -1,20 +1,26 @@
-import { Router } from 'express';
-import usuarioController from '../controllers/usuarioController';
-class UsuarioRoutes{
-    public router: Router = Router();
+import { Router } from "express";
+import { usuarioController } from "../controllers/usuarioController";
+import { checkJwt } from "../middlewares/jwt";
 
-    constructor(){
+class UsuarioRoutes {
+
+    public router: Router;
+
+    constructor() {
+        this.router = Router();
         this.config();
     }
 
-    config(): void {
-        this.router.get('/', usuarioController.list);
-        this.router.get('/:id', usuarioController.getOne);
-        this.router.post('/', usuarioController.create);
-        this.router.put('/:id', usuarioController.update);
-        this.router.delete('/:id', usuarioController.delete);
+    private config() {
+        // listado
+        this.router.get('/', usuarioController.listar);
+        // insercion
+        this.router.post('/', usuarioController.insertar);
+        // actualizar
+        this.router.put('/', usuarioController.actualizar);
+        // eliminar
+        this.router.delete('/:cveUsuario', usuarioController.eliminar);
     }
 }
-
-const usuarioRoutes =new UsuarioRoutes();
+const usuarioRoutes = new UsuarioRoutes();
 export default usuarioRoutes.router;

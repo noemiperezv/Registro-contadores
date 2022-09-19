@@ -12,55 +12,138 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+exports.usuarioController = void 0;
+const usuarioDAO_1 = __importDefault(require("../dao/usuarioDAO"));
+const validator_1 = __importDefault(require("validator"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 class UsuarioController {
-    list(req, res) {
+    /**
+     * @description Lista los usuarios disponibles
+     * @param req
+     * @param res
+     * @returns Promise<Response<any, Record<string, any>> | undefined>
+     */
+    listar(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //res.send('Contadores')
-            //pool.query('DESCRIBE tbl_usuario');
-            //res.json('listando contadores');
-            const contadores = yield database_1.default.query('SELECT * FROM tbl_usuario');
-            res.json(contadores);
-        });
-    }
-    getOne(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            //res.json({text:'Este es el contador buscado ' + req.params.id}); 
-            const usuario = yield database_1.default.query('SELECT * FROM tbl_usuario WHERE cveUsuario = ?', [id]);
-            console.log(usuario);
-            if (usuario.length > 0) {
-                return res.json(usuario[0]);
+            try {
+                const result = yield usuarioDAO_1.default.listar();
+                res.json(result);
             }
-            else {
-                res.status(404).json({ text: 'El usuario no existe.' });
+            catch (error) {
+                return res.status(500).json({ message: `${error.message}` });
             }
-            res.json({ text: 'Contador encontrado' });
         });
     }
-    create(req, res) {
+    /**
+     *  @description Inserción de usuarios a la bd
+     * @param req
+     * @param res
+     * @returns Promise<Response<any, Record<string, any>> | undefined>
+     */
+    insertar(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.default.query('INSERT INTO tbl_usuario set ?', [req.body]);
-            console.log(req.body);
-            res.json({ message: 'Contador guardado!!' });
+            try {
+                // se obtienen los datos del body
+                var usuario = req.body;
+                // validar que los datos no sean nulos o indefinidos
+                if (!usuario.nombre
+                    || !usuario.apellidos
+                    || !usuario.username
+                    || !usuario.password) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1 });
+                }
+                // se verifica que los datos no se encuentren vacios
+                if (validator_1.default.isEmpty(usuario.nombre.trim())
+                    || validator_1.default.isEmpty(usuario.apellidos.trim())
+                    || validator_1.default.isEmpty(usuario.username.trim())
+                    || validator_1.default.isEmpty(usuario.password.trim())) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1 });
+                }
+                // encriptar nuestra contraseña
+                var encryptedText = bcryptjs_1.default.hashSync(usuario.password, 8).toString();
+                usuario.password = encryptedText;
+                const newUser = {
+                    nombre: usuario.nombre.trim(),
+                    apellidos: usuario.apellidos.trim(),
+                    username: usuario.username.trim(),
+                    password: usuario.password.trim()
+                };
+                console.log(newUser);
+                // inserción de los datos
+                const result = yield usuarioDAO_1.default.insertar(newUser);
+                if (result.affectedRows > 0) {
+                    return res.json({ message: "Los datos se guardaron correctamente", code: 0 });
+                }
+                else {
+                    return res.status(404).json({ message: result.message, code: 1 });
+                }
+            }
+            catch (error) {
+                return res.status(500).json({ message: `${error.message}` });
+            }
         });
     }
-    delete(req, res) {
+    actualizar(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            yield database_1.default.query('DELETE FROM tbl_usuario WHERE cveUsuario = ?', [id]);
-            //res.json({text:'Eliminando un contador ' + req.params.id});
-            res.json({ message: 'El juego fue eliminado' + [id] });
+            try {
+                // se obtienen los datos del body
+                var usuario = req.body;
+                // validar que los datos no sean nulos o indefinidos
+                if (!usuario.cveUsuario
+                    || !usuario.nombre
+                    || !usuario.apellidos) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1 });
+                }
+                // se verifica que los datos no se encuentren vacios
+                if (usuario.cveUsuario <= 0
+                    || validator_1.default.isEmpty(usuario.nombre.trim())
+                    || validator_1.default.isEmpty(usuario.apellidos.trim())) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1 });
+                }
+                const newUser = {
+                    nombre: usuario.nombre.trim(),
+                    apellidos: usuario.apellidos.trim()
+                };
+                // actualización de los datos
+                const result = yield usuarioDAO_1.default.actualizar(newUser, usuario.cveUsuario);
+                if (result.affectedRows > 0) {
+                    return res.json({ message: "Los datos se actualizaron correctamente", code: 0 });
+                }
+                else {
+                    return res.status(404).json({ message: result.message, code: 1 });
+                }
+            }
+            catch (error) {
+                return res.status(500).json({ message: `${error.message}` });
+            }
         });
     }
-    update(req, res) {
+    eliminar(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            //res.json({text:'Actualizando un contador ' + req.params.id});
-            yield database_1.default.query('UPDATE tbl_usuario SET ? WHERE cveUsuario = ?', [req.body, id]);
-            res.json({ "message": 'Se actualizó el contador.' });
+            try {
+                // se obtienen los datos del body
+                var { cveUsuario } = req.params;
+                // validar que los datos no sean nulos o indefinidos
+                if (!cveUsuario) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1 });
+                }
+                // se verifica que los datos no se encuentren vacios
+                if (validator_1.default.isEmpty(cveUsuario.trim())) {
+                    return res.status(404).json({ message: "Todos los datos son requeridos", code: 1 });
+                }
+                // actualización de los datos
+                const result = yield usuarioDAO_1.default.eliminar(parseInt(cveUsuario));
+                if (result.affectedRows > 0) {
+                    return res.json({ message: "Los datos se eliminaron correctamente", code: 0 });
+                }
+                else {
+                    return res.status(404).json({ message: result.message, code: 1 });
+                }
+            }
+            catch (error) {
+                return res.status(500).json({ message: `${error.message}` });
+            }
         });
     }
 }
-const usuarioController = new UsuarioController();
-exports.default = usuarioController;
+exports.usuarioController = new UsuarioController();
