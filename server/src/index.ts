@@ -30,6 +30,7 @@ class Server {
         this.app.use('/api/contador',contadorRoutes);
         this.app.use('/api/usuario',usuarioRoutes);
         this.app.use('/api/auth',authRoutes);
+        this.app.use("/api/users", usuarioRoutes);
     }
 
     start(): void{

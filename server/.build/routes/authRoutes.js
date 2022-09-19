@@ -8,7 +8,6 @@ class AuthRoutes {
         this.config();
     }
     config() {
-        this.router.get('/', authController_1.authController.list);
         this.router.post('/', authController_1.authController.iniciarSesion);
     }
 }

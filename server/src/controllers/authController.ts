@@ -3,6 +3,7 @@ import dao from "../dao/authDAO";
 import jwt from 'jsonwebtoken';
 import keySecret from "../keySecret";
 import validator from 'validator';
+import bcryptjs from 'bcryptjs';
 
 class AuthController {
     public async iniciarSesion(req: Request, res: Response) {
@@ -33,11 +34,14 @@ class AuthController {
             }
 
             for (let usuario of lstUsers) {
-                if (usuario.password == password) {
+                console.log("Contraseña cifrada" + bcryptjs.hashSync(password,8));
+                    console.log("Contraseña no cifrada" + usuario.password);
+                if (bcryptjs.compareSync(password,usuario.password)) {
                     const {password, fechaRegistro, ... newUser} = usuario;
 
                     var token = jwt.sign(newUser, keySecret.keys.secret, { expiresIn: '1h'});
-                    
+                    console.log("Contraseña cifrada" + bcryptjs.hashSync(password,8));
+                    console.log("Contraseña no cifrada" + usuario.password);
                     return res.json({ message : "Autentificación correcta", token, code: 0 });
                 } else {
                     return res.status(404).json({ message : "El usuario y/o contraseña es incorrecto", code: 1});

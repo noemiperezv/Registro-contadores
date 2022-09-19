@@ -11,7 +11,6 @@ class AuthRoutes {
     }
 
     config() {
-        this.router.get('/', authController.list);
         this.router.post('/', authController.iniciarSesion);
     }
 
