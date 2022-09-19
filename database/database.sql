@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS tbl_usuario (
 CREATE TABLE IF NOT EXISTS tbl_contador (
 	cveContador SMALLINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(250) NOT NULL,
-    descripcion VARCHAR(500),
+    descripcion VARCHAR(500) NOT NULL,
     tipoContrtacion INT NOT NULL,
     fechaContratacion DATETIME NOT NULL,
     cveRegistro SMALLINT NOT NULL,

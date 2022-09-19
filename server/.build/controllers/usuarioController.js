@@ -13,13 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = __importDefault(require("../database"));
-class ContadorController {
+class UsuarioController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             //res.send('Contadores')
             //pool.query('DESCRIBE tbl_usuario');
             //res.json('listando contadores');
-            const contadores = yield database_1.default.query('SELECT * FROM tbl_contador');
+            const contadores = yield database_1.default.query('SELECT * FROM tbl_usuario');
             res.json(contadores);
         });
     }
@@ -27,7 +27,7 @@ class ContadorController {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
             //res.json({text:'Este es el contador buscado ' + req.params.id}); 
-            const usuario = yield database_1.default.query('SELECT * FROM tbl_contador WHERE cveContador = ?', [id]);
+            const usuario = yield database_1.default.query('SELECT * FROM tbl_usuario WHERE cveUsuario = ?', [id]);
             console.log(usuario);
             if (usuario.length > 0) {
                 return res.json(usuario[0]);
@@ -40,7 +40,7 @@ class ContadorController {
     }
     create(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.default.query('INSERT INTO tbl_contador set ?', [req.body]);
+            yield database_1.default.query('INSERT INTO tbl_usuario set ?', [req.body]);
             console.log(req.body);
             res.json({ message: 'Contador guardado!!' });
         });
@@ -48,7 +48,7 @@ class ContadorController {
     delete(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
-            yield database_1.default.query('DELETE FROM tbl_contador WHERE cveContador = ?', [id]);
+            yield database_1.default.query('DELETE FROM tbl_usuario WHERE cveUsuario = ?', [id]);
             //res.json({text:'Eliminando un contador ' + req.params.id});
             res.json({ message: 'El juego fue eliminado' + [id] });
         });
@@ -57,10 +57,10 @@ class ContadorController {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
             //res.json({text:'Actualizando un contador ' + req.params.id});
-            yield database_1.default.query('UPDATE tbl_contador SET ? WHERE cveContador = ?', [req.body, id]);
+            yield database_1.default.query('UPDATE tbl_usuario SET ? WHERE cveUsuario = ?', [req.body, id]);
             res.json({ "message": 'Se actualizó el contador.' });
         });
     }
 }
-const contadorController = new ContadorController();
-exports.default = contadorController;
+const usuarioController = new UsuarioController();
+exports.default = usuarioController;
