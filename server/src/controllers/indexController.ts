@@ -3,7 +3,7 @@ import {Request, Response} from 'express';
 class IndexController{
     public index (req:Request, res: Response){
         //res.send('Hello')
-        res.json({text: 'APIesta en games'})
+        res.json({text: 'Esta es la api para la gestión de contadores'})
     } 
 }
 

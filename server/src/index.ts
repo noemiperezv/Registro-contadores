@@ -4,6 +4,7 @@ import cors from 'cors';
 import indexRoutes from './routes/indexRoutes';
 import contadorRoutes from './routes/contadorRoutes';
 import usuarioRoutes from './routes/usuarioRoutes';
+import authRoutes from './routes/authRoutes';
 
 
 class Server {
@@ -28,6 +29,7 @@ class Server {
         this.app.use('/',indexRoutes);
         this.app.use('/api/contador',contadorRoutes);
         this.app.use('/api/usuario',usuarioRoutes);
+        this.app.use('/api/auth',authRoutes);
     }
 
     start(): void{
